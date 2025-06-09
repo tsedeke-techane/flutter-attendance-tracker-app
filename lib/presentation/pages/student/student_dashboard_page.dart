@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:crossplatform_flutter/application/course/course_controller.dart';
 import 'package:crossplatform_flutter/domain/course/course.dart';
 
 class StudentDashboardPage extends ConsumerWidget {
@@ -8,18 +9,15 @@ class StudentDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Placeholder list of courses for UI purposes only
-    final courses = [
-      Course(id: '1', name: 'Mathematics', teacherName: 'Mr. Tesfa'),
-      Course(id: '2', name: 'Biology', teacherName: 'Ms. Eden'),
-    ];
+    // Watch the courses from the provider
+    final coursesAsync = ref.watch(studentCoursesProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A1A2F),
       body: SafeArea(
         child: Column(
           children: [
-            // Header with logo and dummy refresh
+            // Header with logo and refresh button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -33,7 +31,8 @@ class StudentDashboardPage extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.refresh, color: Colors.white),
                     onPressed: () {
-                      // Do nothing in UI-only version
+                      // Refresh courses
+                      ref.refresh(studentCoursesProvider);
                     },
                   ),
                 ],
@@ -51,7 +50,16 @@ class StudentDashboardPage extends ConsumerWidget {
                     topRight: Radius.circular(30),
                   ),
                 ),
-                child: _buildContent(context, courses),
+                child: coursesAsync.when(
+                  data: (courses) => _buildContent(context, courses),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => Center(
+                    child: Text(
+                      'Error loading courses: ${error.toString()}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -65,6 +73,7 @@ class StudentDashboardPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 16),
+        // Greeting text
         RichText(
           text: const TextSpan(
             style: TextStyle(
@@ -80,6 +89,7 @@ class StudentDashboardPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 24),
+        // Grid of courses
         Expanded(
           child: courses.isEmpty
               ? const Center(
@@ -99,9 +109,7 @@ class StudentDashboardPage extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final course = courses[index];
                     return GestureDetector(
-                      onTap: () {
-                        // Do nothing in UI-only version
-                      },
+                      onTap: () => context.go('/class-detail/${course.id}/${course.name}/${course.teacherName}'),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -131,31 +139,57 @@ class StudentDashboardPage extends ConsumerWidget {
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Row(
                                     children: [
-                                      Icon(Icons.person, color: Colors.white, size: 12),
+                                      Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                        size: 12,
+                                      ),
                                       SizedBox(width: 4),
-                                      Text('80%', style: TextStyle(color: Colors.white, fontSize: 12)),
+                                      Text(
+                                        '80%',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Row(
                                     children: [
-                                      Icon(Icons.timer, color: Colors.white, size: 12),
+                                      Icon(
+                                        Icons.timer,
+                                        color: Colors.white,
+                                        size: 12,
+                                      ),
                                       SizedBox(width: 4),
-                                      Text('2 hrs', style: TextStyle(color: Colors.white, fontSize: 12)),
+                                      Text(
+                                        '2 hrs',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -169,6 +203,8 @@ class StudentDashboardPage extends ConsumerWidget {
                 ),
         ),
         const SizedBox(height: 16),
+        // Scan button at the bottom
+        
       ],
     );
   }
